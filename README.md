@@ -17,8 +17,7 @@ This project focuses on analyzing **GHG emissions data** from various global sou
 - **IPCC Greenhouse Gas Emissions Inventory**
 
 ## 🛠 Tools & Technologies
-- **Python** (pandas, matplotlib, seaborn) – Data cleaning, processing & visualization
-- **Power BI** – Interactive dashboards for emissions insights
+- **R** - Forecasting and Statistical Calculation
 - **Excel** – Data structuring and formatting
 
 ## 📈 Analysis & Visualizations
@@ -26,6 +25,7 @@ This project focuses on analyzing **GHG emissions data** from various global sou
 - **Bar Chart:** Top 10 highest-emitting countries.
 - **Pie Chart:** Breakdown of emissions by gas type (CO₂, CH₄, N₂O).
 - **Regression Model:** Predicting future emissions (2025-2050)
+- **Line Chart:** Year on Year Emissions Growth and Forecast
 ```
 
 ## 🚀 How to Run the Analysis
