@@ -1,0 +1,136 @@
+---
+title: "Environmental Data Analysis Code"
+author: "Darshita Guckhool"
+date: "2025-06-12"
+output:
+  pdf_document: default
+  
+---
+
+```{r echo=TRUE}
+rm(list = ls())
+library(rio)
+library(tseries)
+library(forecast)
+library(vars)
+library(dplyr)
+library(ggplot2)
+```
+
+
+```{r echo=TRUE}
+data.emissions <- import("total-ghg-emissions.csv")
+split_data <- split(data.emissions, data.emissions$Entity)
+data.world<- subset(split_data$World, select = c(Year,Emissions))
+years <- data.world$Year
+plot(data.world, type="l", col= "red", main="World Emissions Timeline" )
+
+```
+
+
+The Line graph above represents the timeline as to how global GHG emissions have
+been progressing as time passes by. The graph evidently shows that GhG emissions
+have rapidly increased but what we also notice that there is a shift around the
+1950s where GHG emissions had a rapid increase. However it is important to note
+that this graph simply shows the progression and not the year on year growth, 
+meaning emissions could be decreasing compared to the previous years but it will
+not distinctively be seen on this graph since we are also comparing it to the 
+1850s.
+
+```{r echo=TRUE}
+emissions.yoy <- diff(log(data.world$Emissions), lag = 1)
+years <- data.world$Year[-1]
+plot(years,emissions.yoy, type="l", xlab= "year",ylab="Year on Year log change" 
+     ,main = "Year on Year Growth of Emissions")
+
+```
+
+To better show if emissions are actually rapidly increasing or decreasing we can
+take into account the year on year growth, this allows to see if the rate in 
+emissions is increasing or decreasing. 
+
+As the graph below shows the emissions rates have constantly been fluctuating,
+however notice as we go past the 2000s we see that the peaks and troughs are 
+shortening towards the centre indicating fewer fluctutaion and a decreasing
+rate in GHG emissions. However alot more of a decrease is neccessary to achieve
+net zero emissions.
+
+```{r echo=TRUE}
+mod.emissions <- auto.arima(emissions.yoy, seasonal = FALSE, stationary = TRUE, 
+                            ic = "bic")
+summary(mod.emissions)
+
+
+```
+
+
+Below is a simple ARIMA calculation needed to be able to create the neccessary
+forecast
+
+```{r echo=TRUE}
+plot(mod.emissions$residuals)
+plot(density(mod.emissions$residuals))
+ehat <- mod.emissions$residuals
+summary(Arima(ehat, order = c(1,0,0), include.mean = FALSE))
+```
+
+
+```{r echo=TRUE}
+adf.test(emissions.yoy, alternative = c("stationary"))
+```
+
+
+```{r echo=TRUE}
+start.year<- min(data.world$Year)+1
+yoy_ts <- ts(emissions.yoy, start = start.year, frequency = 1)
+emissions_model <-Arima(yoy_ts, order = c(0,0,0), include.mean = TRUE)
+fc.emissions <- forecast(mod.emissions, h=10)
+autoplot(fc.emissions)
+
+```
+
+
+The grpah below shows the predicted forecast of the year on year growth of 
+emissions for the next 10 years (until 2033) we can see that emissions are 
+predicted to almost flatline meaning the year on year change in emissions will
+not be changing, this doesnt mean that emissions are going to be zero, it simply
+means there is a high likely chance GHG emissions will not increase or decrease
+from the previous year. Ofcourse this is a simple forecast and the the graph
+highlights other possibilites including peaks and troughs, the darker the shaded
+area the higher likely probability. 
+
+The predicition above does have its flaws, for one it is purely based on the 
+historic distributiion of GHG emissions, meaning instances like the industrial 
+boom, where emissions rose drastically and the covid-19 pandemic where emissions
+drastically reducd are reference points for this prediction. This forecast also 
+does not account for political or economic changes that may drastically affect
+how we as humand percieve emissions and prioritize enviromental conservation.
+
+```{r echo=TRUE}
+
+split_data_year <- split(data.emissions, data.emissions$Year)
+data_2023 <- split_data_year$`2023`
+top_25<-data_2023 %>%
+  top_n (25, data_2023$Emissions)
+ggplot(top_25, aes(x=Code, y=Emissions)) + geom_bar(stat="Identity")
+
+
+```
+
+
+The bar chart above refelcts the highest emitters of GHG in the World where the
+first bar is the total emissions in the world and the remainders are the top 8
+emitters.
+
+
+
+##References:
+
+Our World in Data – CO₂ and Greenhouse Gas Emissions Dataset
+World Bank Climate Data
+NASA Climate Reports
+IPCC Greenhouse Gas Emissions Inventory
+
+
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
